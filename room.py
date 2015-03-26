@@ -3,8 +3,10 @@ import json
 from datetime import datetime
 from time import sleep
 from subprocess import call
+from os import getcwd
 BASE_URL = 'http://labs.library.gvsu.edu/display/getRoomAvailability.php?roomId='
 MINUTES = 10
+PATH = getcwd() + '/'
 
 def checkRoom(id):
 	results = urllib2.urlopen(BASE_URL + str(id)).read()
@@ -22,9 +24,9 @@ def checkRoom(id):
 	return remaining, reservation_id
 
 def beep():
-	call('aplay /home/pi/reminder/warning.wav', shell=True)
+	call('aplay ' + PATH + 'warning.wav', shell=True)
 def main():
-	with open('/home/pi/reminder/roomid.txt') as f:
+	with open(PATH + 'roomid.txt') as f:
 		room_id = int(f.read())
 	last_id = 0
 	while True:
