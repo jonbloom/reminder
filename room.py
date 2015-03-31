@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 from time import sleep
 from subprocess import call
-from sys import stdout
+from sys import stdout, argv
 from os import getcwd
 from collections import defaultdict
 
@@ -53,8 +53,7 @@ def play_sound(sound):
 	call('aplay ' + PATH + sound, shell=True)
 
 def main():
-	with open(PATH + 'roomid.txt') as f:
-		room_id = int(f.read())
+	room_id = (argv[1] or 0)
 	last_id = None
 	last_reserved_by = None
 	printed = False
