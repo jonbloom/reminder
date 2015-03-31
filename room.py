@@ -9,13 +9,12 @@ from os import getcwd
 from collections import defaultdict
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
-MINUTES = 59
+MINUTES = 10
 PATH = getcwd() + '/'
 SOUND = 'warning.wav'
 
 
 def get_info_from_booking(booking):
-	print booking
 	now = datetime.now()
 	data = defaultdict(str)
 	data['booking_id'] = booking.find('BookingID').text
@@ -41,7 +40,6 @@ def get_room(room_id):
 		booking.end_time = datetime.strptime(booking.find('TimeEventEnd').text, '%Y-%m-%dT%H:%M:%S')	
 		
 		if booking.start_time < now and now <= booking.end_time:
-			print booking.find('BookingID').text
 			return get_info_from_booking(booking)  
 
 
