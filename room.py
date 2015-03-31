@@ -1,5 +1,4 @@
 import urllib2
-import json
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import time
@@ -10,12 +9,13 @@ from os import getcwd
 from collections import defaultdict
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
-MINUTES = 10
+MINUTES = 59
 PATH = getcwd() + '/'
 SOUND = 'warning.wav'
 
 
 def get_info_from_booking(booking):
+	print booking
 	now = datetime.now()
 	data = defaultdict(str)
 	data['booking_id'] = booking.find('BookingID').text
@@ -39,10 +39,10 @@ def get_room(room_id):
 	for booking in bookings:
 		booking.start_time = datetime.strptime(booking.find('TimeEventStart').text, '%Y-%m-%dT%H:%M:%S')
 		booking.end_time = datetime.strptime(booking.find('TimeEventEnd').text, '%Y-%m-%dT%H:%M:%S')	
-		if booking.start_time < now < booking.end_time:
-			current = booking
-	if current is not None:
-		return get_info_from_booking(current) 
+		
+		if booking.start_time < now and now <= booking.end_time:
+			print booking.find('BookingID').text
+			return get_info_from_booking(booking)  
 
 
 def get_time(booking):
@@ -53,7 +53,7 @@ def play_sound(sound):
 	call('aplay ' + PATH + sound, shell=True)
 
 def main():
-	room_id = (argv[1] or 0)
+	room_id = argv[1]
 	last_id = None
 	last_reserved_by = None
 	printed = False
@@ -73,7 +73,9 @@ def main():
 				stdout.write('\r')
 				stdout.flush()
 			sleep(10)
-		except KeyboardInterrupt:
+		except KeyboardInterrupt as e:
 			exit()
+		except:
+			pass
 if __name__ == '__main__':
 	main()
