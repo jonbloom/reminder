@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 from time import sleep
 from subprocess import call
+from sys import stdout
 from os import getcwd
 from collections import defaultdict
 
@@ -22,6 +23,7 @@ def get_info_from_booking(booking):
 	data['end'] = booking.end_time
 	data['minutes_left'] = booking.end_time.minute - now.minute 
 	data['reserved_by'] = booking.find('EventName').text.split(' - ')[0]
+	data['room_name'] = booking.find('RoomDescription').text
 	return data
 
 def get_room(room_id):
@@ -55,16 +57,22 @@ def main():
 		room_id = int(f.read())
 	last_id = None
 	last_reserved_by = None
-	
+	printed = False
 	while True:
 		try:
 			room = get_room(room_id)
+			if not printed:
+				print room['room_name']
+				printed = True
 			if room['minutes_left'] < MINUTES and room['booking_id'] != last_id and room['reserved_by'] != last_reserved_by:
 				last_id = room['booking_id']
 				last_reserved_by = room['reserved_by']
 				play_sound(SOUND)
 			else:
-				print room['minutes_left']
+				stdout.write(str(room['minutes_left']))
+				stdout.flush()
+				stdout.write('\r')
+				stdout.flush()
 			sleep(10)
 		except KeyboardInterrupt:
 			exit()
