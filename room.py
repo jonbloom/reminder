@@ -10,7 +10,7 @@ from collections import defaultdict
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
 MINUTES = 10
-PATH = getcwd() + '/'
+PATH = '/home/pi/reminder/'
 SOUND = 'warning.wav'
 
 
@@ -48,6 +48,7 @@ def get_time(booking):
 	return date
 
 def play_sound(sound):
+	call('amixer set PCM,0 92%', shell=True)
 	call('aplay ' + PATH + sound, shell=True)
 
 def main():
