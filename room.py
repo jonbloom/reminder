@@ -7,12 +7,33 @@ from subprocess import call
 from sys import stdout, argv
 from os import getcwd
 from collections import defaultdict
+import json
+import fcntl, socket, struct
+
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
 MINUTES = 10
 PATH = '/home/pi/reminder/'
 SOUND = 'warning.wav'
 
+def send_details(room_id):
+	data = dict()
+	# http://stackoverflow.com/a/4789267/2961967 Gets MAC Address
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	mac_address = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', 'eth0'))
+	mac_address = ':'.join(['%02x' % ord(char) for char in mac_address[18:24]])
+	# http://stackoverflow.com/a/166589/2961967 Gets IP address
+	s.connect(('8.8.8.8',80))
+	ip = s.getsockname()[0]
+	s.close()
+
+	data['room_id'] = room_id
+	data['ip'] = ip
+	data['mac'] = mac_address
+
+	url = 'http://labs.library.gvsu.edu/raspberry_pi/report.php'
+	req = urllib2.Request(url, json.dumps(data), {'Content-Type': 'applicaiton/json'})
+	urllib2.urlopen(req)
 
 def get_info_from_booking(booking):
 	now = datetime.now()
@@ -30,6 +51,7 @@ def get_room(room_id):
 	now_str = now.strftime('%Y-%m-%d')
 	url = BASE_URL.format(*[room_id,now_str,now_str])
 	results = urllib2.urlopen(url).read()
+	send_details(room_id)
 
 	xml = ET.fromstring(results)
 	bookings = sorted(xml.findall('Data'),key=get_time)
