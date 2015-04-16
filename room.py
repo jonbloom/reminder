@@ -59,7 +59,7 @@ def get_room(room_id):
 		booking.start_time = datetime.strptime(booking.find('TimeEventStart').text, '%Y-%m-%dT%H:%M:%S')
 		booking.end_time = datetime.strptime(booking.find('TimeEventEnd').text, '%Y-%m-%dT%H:%M:%S')	
 		
-		if booking.start_time < now and now <= booking.end_time:
+		if booking.start_time < now <= booking.end_time:
 			return get_info_from_booking(booking)  
 
 
