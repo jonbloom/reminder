@@ -1,4 +1,4 @@
-import urllib2
+import urllib
 import xml.etree.ElementTree as ET
 import json
 import fcntl, socket, struct
@@ -28,13 +28,10 @@ def send_details(room_id):
 	s.connect(('8.8.8.8',80))
 	data['ip'] = s.getsockname()[0]
 	s.close()
-
 	data['room_id'] = room_id
 	data['pw'] = pw
-
-	url = 'http://labs.library.gvsu.edu/raspberry_pi/report.php?' + urllib2.urlencode(data)
-	req = urllib2.Request(url)
-	urllib2.urlopen(req)
+	url = 'http://labs.library.gvsu.edu/raspberrypi-reporter/report.php?' + urllib.urlencode(data)
+	urllib.urlopen(url)
 
 def get_info_from_booking(booking):
 	now = datetime.now()
@@ -51,7 +48,7 @@ def get_room(room_id):
 	now = datetime.now()
 	now_str = now.strftime('%Y-%m-%d')
 	url = BASE_URL.format(*[room_id,now_str,now_str])
-	results = urllib2.urlopen(url).read()
+	results = urllib.urlopen(url).read()
 	send_details(room_id)
 
 	xml = ET.fromstring(results)
@@ -97,7 +94,7 @@ def main():
 			sleep(10)
 		except KeyboardInterrupt as e:
 			exit()
-		except:
-			pass
+		except Exception as e:
+			print e
 if __name__ == '__main__':
 	main()
