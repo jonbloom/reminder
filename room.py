@@ -23,7 +23,7 @@ def send_details(room_id):
 	# http://stackoverflow.com/a/4789267/2961967 Gets MAC Address
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	mac_address = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', 'eth0'))
-	data['mac'] = = ':'.join(['%02x' % ord(char) for char in mac_address[18:24]])
+	data['mac'] = ':'.join(['%02x' % ord(char) for char in mac_address[18:24]])
 	# http://stackoverflow.com/a/166589/2961967 Gets IP address
 	s.connect(('8.8.8.8',80))
 	data['ip'] = s.getsockname()[0]
