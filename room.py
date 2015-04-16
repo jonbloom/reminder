@@ -27,11 +27,7 @@ def send_details(room_id):
 	ip = s.getsockname()[0]
 	s.close()
 
-	data['room_id'] = room_id
-	data['ip'] = ip
-	data['mac'] = mac_address
-
-	url = 'http://labs.library.gvsu.edu/raspberry_pi/report.php'
+	url = 'http://labs.library.gvsu.edu/raspberry_pi/report.php?room_id=' + room_id + '&ip=' + ip + '&mac=' + mac_address
 	req = urllib2.Request(url, json.dumps(data), {'Content-Type': 'applicaiton/json'})
 	urllib2.urlopen(req)
 
