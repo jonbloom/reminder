@@ -20,22 +20,26 @@ SOUND = 'warning.wav'
 
 def send_details(room_id):
 	data = dict()
+
 	# http://stackoverflow.com/a/4789267/2961967 Gets MAC Address
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	mac_address = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', 'eth0'))
 	data['mac'] = ':'.join(['%02x' % ord(char) for char in mac_address[18:24]])
+
 	# http://stackoverflow.com/a/166589/2961967 Gets IP address
 	s.connect(('8.8.8.8',80))
 	data['ip'] = s.getsockname()[0]
 	s.close()
+
 	data['room_id'] = room_id
 	data['pw'] = pw
 	url = 'http://labs.library.gvsu.edu/raspberrypi-reporter/report.php?' + urllib.urlencode(data)
 	urllib.urlopen(url)
 
-def get_info_from_booking(booking):
+def get_info_from_booking(booking, room_id):
 	now = datetime.now()
 	data = defaultdict(str)
+	data['room_id'] = room_id
 	data['booking_id'] = booking.find('BookingID').text
 	data['start'] = booking.start_time
 	data['end'] = booking.end_time
@@ -60,17 +64,20 @@ def get_room(room_id):
 		booking.end_time = datetime.strptime(booking.find('TimeEventEnd').text, '%Y-%m-%dT%H:%M:%S')	
 		
 		if booking.start_time < now <= booking.end_time:
-			return get_info_from_booking(booking)  
+			return get_info_from_booking(booking, room_id)  
 
 
 def get_time(booking):
 	date = datetime.strptime(booking.find('TimeEventStart').text,'%Y-%m-%dT%H:%M:%S')
 	return date
 
-def play_sound(sound):
+def play_sound(sound, room):
 	call('amixer set PCM,0 92%', shell=True)
 	call('aplay ' + PATH + sound, shell=True)
-
+	
+	room['pw'] = pw
+	url = 'http://labs.library.gvsu.edu/raspberrypi-reporter/log.php?' + urllib.urlencode(room)
+	urllib.urlopen(url)
 def main():
 	room_id = argv[1]
 	last_id = None
@@ -85,7 +92,7 @@ def main():
 			if room['minutes_left'] < MINUTES and room['booking_id'] != last_id and room['reserved_by'] != last_reserved_by:
 				last_id = room['booking_id']
 				last_reserved_by = room['reserved_by']
-				play_sound(SOUND)
+				play_sound(SOUND, room)
 			else:
 				stdout.write(str(room['minutes_left']))
 				stdout.flush()
