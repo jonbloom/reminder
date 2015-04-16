@@ -1,14 +1,16 @@
 import urllib2
 import xml.etree.ElementTree as ET
+import json
+import fcntl, socket, struct
 from datetime import datetime
-import time
 from time import sleep
 from subprocess import call
 from sys import stdout, argv
 from os import getcwd
 from collections import defaultdict
-import json
-import fcntl, socket, struct
+
+from secret import pw
+
 
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
@@ -21,14 +23,17 @@ def send_details(room_id):
 	# http://stackoverflow.com/a/4789267/2961967 Gets MAC Address
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	mac_address = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', 'eth0'))
-	mac_address = ':'.join(['%02x' % ord(char) for char in mac_address[18:24]])
+	data['mac'] = = ':'.join(['%02x' % ord(char) for char in mac_address[18:24]])
 	# http://stackoverflow.com/a/166589/2961967 Gets IP address
 	s.connect(('8.8.8.8',80))
-	ip = s.getsockname()[0]
+	data['ip'] = s.getsockname()[0]
 	s.close()
 
-	url = 'http://labs.library.gvsu.edu/raspberry_pi/report.php?room_id=' + room_id + '&ip=' + ip + '&mac=' + mac_address
-	req = urllib2.Request(url, json.dumps(data), {'Content-Type': 'applicaiton/json'})
+	data['room_id'] = room_id
+	data['pw'] = pw
+
+	url = 'http://labs.library.gvsu.edu/raspberry_pi/report.php?' + urllib2.urlencode(data)
+	req = urllib2.Request(url)
 	urllib2.urlopen(req)
 
 def get_info_from_booking(booking):
