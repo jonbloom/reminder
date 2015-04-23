@@ -1,17 +1,22 @@
 import urllib
 import xml.etree.ElementTree as ET
-import json
 import fcntl, socket, struct
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
 from subprocess import call
 from sys import stdout, argv
-from os import getcwd
 from collections import defaultdict
+from itertools import tee, islice, chain, izip
+from apscheduler.schedulers.background import BackgroundScheduler
+
+import logging
+logging.basicConfig()
 
 from secret import pw
 
-
+sched = BackgroundScheduler()
+sched.start()        
+jobs = list()
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
 MINUTES = 10
@@ -49,6 +54,11 @@ def get_info_from_booking(booking, room_id):
 	return data
 
 def get_room(room_id):
+	global jobs
+	for job_id in jobs:
+		sched.remove_job(job_id) #clear out all scheduled jobs
+	jobs = list()
+	ten_minutes = timedelta(minutes=10)
 	now = datetime.now()
 	now_str = now.strftime('%Y-%m-%d')
 	url = BASE_URL.format(*[room_id,now_str,now_str])
@@ -57,19 +67,34 @@ def get_room(room_id):
 
 	xml = ET.fromstring(results)
 	bookings = sorted(xml.findall('Data'),key=get_time)
-	current = None
 	
-	for booking in bookings:
-		booking.start_time = datetime.strptime(booking.find('TimeEventStart').text, '%Y-%m-%dT%H:%M:%S')
-		booking.end_time = datetime.strptime(booking.find('TimeEventEnd').text, '%Y-%m-%dT%H:%M:%S')	
+	for last_booking, current_booking, next_booking in prev_next(bookings):
+		current_booking.start_time = datetime.strptime(current_booking.find('TimeEventStart').text, '%Y-%m-%dT%H:%M:%S')
+		current_booking.end_time = datetime.strptime(current_booking.find('TimeEventEnd').text, '%Y-%m-%dT%H:%M:%S')
 		
-		if booking.start_time < now <= booking.end_time:
-			return get_info_from_booking(booking, room_id)  
+		if current_booking.end_time >= now:
+			if next_booking is None or current_booking.find('EventName').text.split(' - ')[0] != next_booking.find('EventName').text.split(' - ')[0]: 
+				
+					job = sched.add_job(
+						play_sound,
+						'date',
+						run_date=current_booking.end_time-ten_minutes,
+						args=[SOUND,get_info_from_booking(current_booking, room_id)],
+						id=current_booking.find('BookingID').text)
+					jobs.append(job.id)
+
 
 
 def get_time(booking):
 	date = datetime.strptime(booking.find('TimeEventStart').text,'%Y-%m-%dT%H:%M:%S')
 	return date
+
+def prev_next(some_iterable):
+	# http://stackoverflow.com/a/1012089/2961967
+    prevs, items, nexts = tee(some_iterable, 3)
+    prevs = chain([None], prevs)
+    nexts = chain(islice(nexts, 1, None), [None])
+    return izip(prevs, items, nexts)
 
 def play_sound(sound, room):
 	call('amixer set PCM,0 92%', shell=True)
@@ -80,24 +105,9 @@ def play_sound(sound, room):
 	urllib.urlopen(url)
 def main():
 	room_id = argv[1]
-	last_id = None
-	last_reserved_by = None
-	printed = False
 	while True:
 		try:
 			room = get_room(room_id)
-			if not printed:
-				print room['room_name']
-				printed = True
-			if room['minutes_left'] < MINUTES and room['booking_id'] != last_id and room['reserved_by'] != last_reserved_by:
-				last_id = room['booking_id']
-				last_reserved_by = room['reserved_by']
-				play_sound(SOUND, room)
-			else:
-				stdout.write(str(room['minutes_left']))
-				stdout.flush()
-				stdout.write('\r')
-				stdout.flush()
 			sleep(10)
 		except KeyboardInterrupt as e:
 			exit()
