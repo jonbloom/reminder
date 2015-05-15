@@ -1,3 +1,4 @@
+from __future__ import print_function
 import urllib
 import xml.etree.ElementTree as ET
 import fcntl, socket, struct
@@ -10,13 +11,12 @@ from itertools import tee, islice, chain, izip
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import logging
-logging.basicConfig()
+logging.basicConfig(level=logging.CRITICAL)
 
 from secret import pw
 
 sched = BackgroundScheduler()
-sched.start()        
-jobs = list()
+sched.start()
 
 BASE_URL = 'http://gvsu.edu/reserve/files/cfc/functions.cfc?method=bookings&roomId={0}&startDate={1}&endDate={2}'
 MINUTES = 10
@@ -54,10 +54,6 @@ def get_info_from_booking(booking, room_id):
 	return data
 
 def get_room(room_id):
-	global jobs
-	for job_id in jobs:
-		sched.remove_job(job_id) #clear out all scheduled jobs
-	jobs = list()
 	ten_minutes = timedelta(minutes=10)
 	now = datetime.now()
 	now_str = now.strftime('%Y-%m-%d')
@@ -80,10 +76,14 @@ def get_room(room_id):
 						'date',
 						run_date=current_booking.end_time-ten_minutes,
 						args=[SOUND,get_info_from_booking(current_booking, room_id)],
-						id=current_booking.find('BookingID').text)
-					jobs.append(job.id)
-
-
+						id=current_booking.find('BookingID').text,
+						replace_existing=True)
+					print('start: {0} end: {1} reserved by: {2} {3}'.format(
+						current_booking.start_time,
+						current_booking.end_time,
+						current_booking.find('EventName').text.split(' - ')[0],
+						'Reminded' if current_booking.end_time < now else ''))
+					
 
 def get_time(booking):
 	date = datetime.strptime(booking.find('TimeEventStart').text,'%Y-%m-%dT%H:%M:%S')
@@ -112,6 +112,6 @@ def main():
 		except KeyboardInterrupt as e:
 			exit()
 		except Exception as e:
-			print e
+			print (e)
 if __name__ == '__main__':
 	main()
