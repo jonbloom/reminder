@@ -26,10 +26,9 @@ Setup Instructions
 9. Add the super secret raspberry pi tracker password in the format
   * `pw = 'supersecretraspberrypitrackerpassword'`
 10. Hit `Ctrl` + `X`, then `y`, and save the file as `secret.py`.
-11. Enter the following commands:
-  1. `cd /etc`
-  2. `sudo nano rc.local`
-12. Add the following line to the end of the file before `exit 0` replacing {EMSID} with the EMS ID of the room the Raspberry Pi will be located:
+11. Run the command `sudo nano /etc/rc.local`.
+12. Add the following line to the end of the file before `exit 0` replacing `{EMSID}` with the EMS ID of the room the Raspberry Pi will be located:
   * `sudo python /home/pi/reminder/room.py {EMSID} &`
 13. Hit `Ctrl` + `X`, then `y`, and save the file as `rc.local`.
 14. You should now be able to issue a `sudo reboot` and see the Raspberry Pi's information populate [here](https://labs.library.gvsu.edu/raspberrypi-reporter/admin.php).
+15. If everything went right, you're done. Go hide the Raspberry Pi somewhere in the room where it won't be tampered with.
