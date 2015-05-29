@@ -18,11 +18,13 @@ Setup Instructions
 6. Change the boot options to console from desktop.
 7. Exit Raspi-Config.
 8. Run the following commands:
-  1. `cd ~`
-  2. `sudo easy_install pip`
-  3. `pip install APScheduler`
-  2. `git clone git://github.com/gvsulib/reminder.git`
-  3. `nano`
+  1. `cd /tmp`
+  2. `wget https://bootstrap.pypa.io/get-pip.py`
+  3. `sudo python get-pip.py`
+  4. `sudo pip install APScheduler`
+  5. `git clone git://github.com/gvsulib/reminder.git`
+  6. `cd ~/reminder`
+  6. `nano`
 9. Add the super secret raspberry pi tracker password in the format
   * `pw = 'supersecretraspberrypitrackerpassword'`
 10. Hit `Ctrl` + `X`, then `y`, and save the file as `secret.py`.
