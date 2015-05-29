@@ -14,7 +14,7 @@ Setup Instructions
 2. Install Raspbian via Noobs if not already installed. Instructions [here](https://www.raspberrypi.org/help/noobs-setup/).
 3. Once you're booted to the desktop, press `Ctrl` + `Alt` + `F1` to access a terminal. Login with the username `pi` and the password `raspberry` if necessary.
 4. Run the command `sudo raspi-config`.
-5. While in Raspi-Config, make sure you have the correct timezone selected.
+5. While in Raspi-Config, make sure you have the correct timezone, locale (`en-US.UTF-8 UTF-8`), and keymap selected.
 6. Change the boot options to console from desktop.
 7. Exit Raspi-Config.
 8. Run the following commands:
